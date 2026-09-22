@@ -1,14 +1,18 @@
 import { defineConfig, devices } from '@playwright/test'
+import { loadEnv } from 'vite'
 
 /**
  * E2E harness for TREK's critical user flows (FE7).
  *
  * Two web servers are orchestrated: the Express/Nest backend on :3001 against an
  * isolated throwaway SQLite DB (e2e/server-launch.mjs sets TREK_DB_FILE + seeds a
- * known admin), and the Vite dev server on :5173 which proxies /api, /uploads,
+ * known admin), and the Vite dev server (5173 unless TREK_DEV_PORT overrides it,
+ * in the shell or in client/.env — vite.config.js reads the same variable) which proxies /api, /uploads,
  * /ws to the backend. Tests run serially against one worker so they share the
  * single seeded database deterministically.
  */
+const WEB_PORT = Number(loadEnv('development', process.cwd(), 'TREK_').TREK_DEV_PORT) || 5173
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -19,7 +23,7 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${WEB_PORT}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -71,7 +75,7 @@ export default defineConfig({
     },
     {
       command: 'npm run dev',
-      port: 5173,
+      port: WEB_PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

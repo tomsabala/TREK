@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { rtlTextAlias } from './rtlTextAlias.js';
@@ -9,8 +9,14 @@ import { rtlTextAlias } from './rtlTextAlias.js';
 // is too big but not which dependency made it so.
 // Mehrere Worktrees laufen hier parallel. Ohne diese beiden Variablen streiten
 // sie sich um 5173 und 3001; mit ihnen bekommt jeder seinen eigenen Satz.
-const DEV_PORT = Number(process.env.TREK_DEV_PORT) || 5173;
-const API_TARGET = process.env.TREK_DEV_API || 'http://localhost:3001';
+// Read through loadEnv rather than process.env directly: that still picks the
+// variables up from the shell (loadEnv merges prefixed process.env entries, and
+// they win), and additionally from client/.env, so a machine where 5173 or 3001
+// already belongs to another project sets its ports once instead of exporting
+// them on every start. playwright.config.ts reads the same two variables.
+const DEV_ENV = loadEnv('development', process.cwd(), 'TREK_');
+const DEV_PORT = Number(DEV_ENV.TREK_DEV_PORT) || 5173;
+const API_TARGET = DEV_ENV.TREK_DEV_API || 'http://localhost:3001';
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -316,6 +322,10 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     port: DEV_PORT,
+    // Refuse to start rather than sliding onto the next free port: the proxy
+    // below, the PWA scope and playwright's baseURL all assume this exact port,
+    // and a silent +1 lands the dev server on whatever else owns that number.
+    strictPort: true,
     // And watch the build output, so rebuilding shared reloads the page rather
     // than leaving a stale module graph behind.
     watch: {

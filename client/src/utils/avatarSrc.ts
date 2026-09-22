@@ -1,3 +1,5 @@
+import { withBase } from './basePath'
+
 /**
  * Resolve a user's raw `avatar` field to an <img src>.
  *
@@ -8,5 +10,5 @@
  */
 export function avatarSrc(avatar?: string | null): string | null {
   if (!avatar) return null
-  return /^https:\/\//i.test(avatar) ? avatar : `/uploads/avatars/${avatar}`
+  return /^https:\/\//i.test(avatar) ? avatar : withBase(`/uploads/avatars/${avatar}`)
 }

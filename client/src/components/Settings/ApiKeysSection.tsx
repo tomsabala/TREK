@@ -10,6 +10,7 @@ import ConfirmDialog from '../shared/ConfirmDialog'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../shared/Toast'
 import { authApi } from '../../api/client'
+import { BASE_NO_SLASH } from '../../utils/basePath'
 
 /**
  * Keys for the public API — the credential a user hands to other software that
@@ -97,7 +98,7 @@ export default function ApiKeysSection(): React.ReactElement {
    */
   const [newScopes, setNewScopes] = useState<Set<PublicApiScope>>(new Set(PUBLIC_API_SCOPES))
 
-  const endpoint = `${window.location.origin}/api/v1`
+  const endpoint = `${window.location.origin}${BASE_NO_SLASH}/api/v1`
   const atLimit = keys.length >= MAX_KEYS
   const allSelected = newScopes.size === PUBLIC_API_SCOPES.length
   const canCreate = !!newName.trim() && !creating && newScopes.size > 0

@@ -10,6 +10,7 @@ import { useTranslation } from '../../i18n'
 import { getApiErrorMessage } from '../../types'
 import CustomSelect from '../shared/CustomSelect'
 import { copyText } from '../../utils/clipboard'
+import { BASE_NO_SLASH } from '../../utils/basePath'
 
 interface AvatarProps {
   username: string
@@ -55,7 +56,7 @@ function ShareLinkSection({ tripId, t }: { tripId: number; t: (key: string, para
     }).catch(() => setLoading(false))
   }, [tripId])
 
-  const shareUrl = shareToken ? `${window.location.origin}/shared/${shareToken}` : null
+  const shareUrl = shareToken ? `${window.location.origin}${BASE_NO_SLASH}/shared/${shareToken}` : null
 
   const handleCreate = async () => {
     try {
@@ -185,7 +186,7 @@ function TripInviteLinkSection({ tripId, t }: { tripId: number; t: (key: string,
       .finally(() => setLoading(false))
   }, [tripId])
 
-  const inviteUrl = token ? `${window.location.origin}/join/${token}` : null
+  const inviteUrl = token ? `${window.location.origin}${BASE_NO_SLASH}/join/${token}` : null
 
   const create = async () => {
     setBusy(true)

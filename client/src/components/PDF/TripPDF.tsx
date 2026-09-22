@@ -16,6 +16,7 @@ import { renderTripMapImage } from './tripMapImage'
 import { formatDistance } from '../../utils/units'
 import { fetchExchangeRates } from '../../hooks/useExchangeRates'
 import { getFlightLegs, getTrainLegs } from '../../utils/flightLegs'
+import { BASE, BASE_NO_SLASH } from '../../utils/basePath'
 
 /**
  * Every day starts a new page by default. On a trip of short days that prints
@@ -104,7 +105,7 @@ function hexColour(value) {
 function absUrl(url) {
   if (!url) return null
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
-  return window.location.origin + (url.startsWith('/') ? '' : '/') + url
+  return window.location.origin + BASE_NO_SLASH + (url.startsWith('/') ? '' : '/') + url
 }
 
 function safeImg(url) {
@@ -624,7 +625,7 @@ export async function downloadTripPDF({ trip, days, places, assignments = {}, ca
 <html lang="${(loc || 'en').split('-')[0]}">
 <head>
 <meta charset="UTF-8">
-<base href="${window.location.origin}/">
+<base href="${window.location.origin}${BASE}">
 <title>${escHtml(trip?.title || tr('pdf.travelPlan'))}</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>

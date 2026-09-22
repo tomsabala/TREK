@@ -3,14 +3,15 @@ import { Check, Copy, ExternalLink } from 'lucide-react'
 import { useTranslation } from '../../i18n/TranslationContext'
 import { trivagoSearchHref, campingSearchHref } from './stayPortalLinks'
 import { copyText } from '../../utils/clipboard'
+import { withBase } from '../../utils/basePath'
 
 const HOTEL_PORTALS = [
-  { name: 'trivago', icon: '/images/portals/trivago.png', href: 'https://www.trivago.com/' },
-  { name: 'CHECK24', icon: '/images/portals/check24.png', href: 'https://hotel.check24.de/' },
+  { name: 'trivago', icon: withBase('/images/portals/trivago.png'), href: 'https://www.trivago.com/' },
+  { name: 'CHECK24', icon: withBase('/images/portals/check24.png'), href: 'https://hotel.check24.de/' },
 ]
 const CAMPING_PORTALS = [
-  { name: 'PiNCAMP', icon: '/images/portals/pincamp.png', href: 'https://www.pincamp.com/' },
-  { name: 'Pitchup', icon: '/images/portals/pitchup.ico', href: 'https://www.pitchup.com/' },
+  { name: 'PiNCAMP', icon: withBase('/images/portals/pincamp.png'), href: 'https://www.pincamp.com/' },
+  { name: 'Pitchup', icon: withBase('/images/portals/pitchup.ico'), href: 'https://www.pitchup.com/' },
 ]
 
 export default function StayPortals({ name, camping, lat, lng, arrival, departure }: { name: string; camping: boolean; lat: number; lng: number; arrival?: string | null; departure?: string | null }): React.ReactElement {

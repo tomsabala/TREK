@@ -1,5 +1,6 @@
 import React from 'react'
 import BrandIcon, { type BrandIconProps } from './BrandIcon'
+import { withBase } from '../../utils/basePath'
 
 /**
  * AirTrail's own mark, unmodified: the control tower in its blue.
@@ -10,5 +11,5 @@ import BrandIcon, { type BrandIconProps } from './BrandIcon'
  * changes its logo TREK should follow the logo, not the coincidence.
  */
 export default function AirTrailIcon(props: BrandIconProps): React.ReactElement {
-  return <BrandIcon src="/brands/airtrail.svg" {...props} />
+  return <BrandIcon src={withBase('/brands/airtrail.svg')} {...props} />
 }

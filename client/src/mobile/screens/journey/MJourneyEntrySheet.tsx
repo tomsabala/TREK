@@ -20,6 +20,7 @@ import { photoUrl, geoOnceErrorKey, isValidGeoPoint } from '../../../pages/journ
 import JournalBody from '../../../components/Journey/JournalBody'
 import { ProviderPicker, type ProviderPhotoGroup } from '../../../components/Journey/JourneyDetailPageProviderPicker'
 import { journeyWeatherCategory, MOBILE_MOODS, MOBILE_WEATHERS } from './mobileJourneyMeta'
+import { withBase } from '../../../utils/basePath'
 
 const PRO_COLOR = '#2FA37A'
 const CON_COLOR = '#D6273B'
@@ -143,7 +144,7 @@ export default function MJourneyEntrySheet({
       const connected: { id: string; name: string }[] = []
       for (const provider of photoProviders) {
         try {
-          const res = await fetch(`/api/integrations/memories/${provider.id}/status`, { credentials: 'include' })
+          const res = await fetch(withBase(`/api/integrations/memories/${provider.id}/status`), { credentials: 'include' })
           if (res.ok && (await res.json()).connected) connected.push(provider)
         } catch { /* provider stays hidden */ }
       }

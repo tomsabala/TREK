@@ -4,6 +4,7 @@ import { useTranslation } from '../../i18n/TranslationContext.js';
 import type { SystemNoticeDTO } from '../../store/systemNoticeStore.js';
 import { ReleaseFeatureVisual } from './ReleaseNoticeVisuals.js';
 import './releaseNotice.css';
+import { withBase } from '../../utils/basePath'
 
 interface Props {
   notice: SystemNoticeDTO;
@@ -71,7 +72,7 @@ export function ReleaseNoticeModal({ notice, visible, onDismiss, onCTA, onSecond
           <div className="rn-release-inner">
             <div className="rn-eyebrow-row">
               <span className="rn-mark">
-                <img src="/icons/icon-white.svg" alt="" aria-hidden="true" />
+                <img src={withBase('/icons/icon-white.svg')} alt="" aria-hidden="true" />
               </span>
               <span className="rn-eyebrow">{t(release.eyebrowKey)}</span>
             </div>

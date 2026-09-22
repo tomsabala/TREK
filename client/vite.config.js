@@ -18,7 +18,20 @@ const DEV_ENV = loadEnv('development', process.cwd(), 'TREK_');
 const DEV_PORT = Number(DEV_ENV.TREK_DEV_PORT) || 5173;
 const API_TARGET = DEV_ENV.TREK_DEV_API || 'http://localhost:3001';
 
+// The mount prefix the bundle is compiled for. Unset (or '/') keeps every emitted
+// URL root-absolute, i.e. byte-identical to owning the origin root; '/a/trek' makes
+// the same build servable behind the apps gateway, which does NOT strip the prefix.
+// loadEnv already merges prefixed process.env entries and lets them win, which is
+// how the Docker build ARG reaches this.
+const rawBase = process.env.TREK_BASE_PATH || DEV_ENV.TREK_BASE_PATH || '/';
+const BASE_PATH = `/${rawBase.replace(/^\/+|\/+$/g, '')}/`.replace(/^\/\/$/, '/');
+const BASE_NO_SLASH = BASE_PATH.replace(/\/$/, '');
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const withBase = (path) => BASE_NO_SLASH + path;
+const stripBasePrefix = (p) => p.slice(BASE_NO_SLASH.length) || '/';
+
 export default defineConfig(({ mode }) => ({
+  base: BASE_PATH,
   plugins: [
     react(),
     mode === 'analyze' &&
@@ -70,15 +83,11 @@ export default defineConfig(({ mode }) => ({
         // build:analyze drops a treemap next to the app; it must never end up in a
         // precache manifest if someone ships that build by accident.
         globIgnores: ['**/stats.html'],
-        navigateFallback: 'index.html',
-        navigateFallbackDenylist: [
-          /^\/api/,
-          /^\/uploads/,
-          /^\/mcp/,
-          /^\/oauth\//,
-          /^\/.well-known\//,
-          /^\/plugin-frame\//,
-        ],
+        // Set explicitly rather than relying on the plugin to prefix it.
+        navigateFallback: BASE_PATH + 'index.html',
+        navigateFallbackDenylist: ['api', 'uploads', 'mcp', 'oauth/', '\\.well-known/', 'plugin-frame/'].map(
+          (p) => new RegExp('^' + escapeRe(BASE_PATH) + p),
+        ),
         runtimeCaching: [
           {
             // Carto map tiles (default provider)
@@ -241,8 +250,8 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#111827',
         background_color: '#0f172a',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: BASE_PATH,
+        start_url: BASE_PATH,
         categories: ['travel', 'navigation'],
         icons: [
           { src: 'icons/apple-touch-icon-180x180.png', sizes: '180x180', type: 'image/png' },
@@ -331,49 +340,63 @@ export default defineConfig(({ mode }) => ({
     watch: {
       ignored: ['!**/shared/dist/**'],
     },
+    // Keys carry the mount prefix so the dev server proxies the same URLs the
+    // bundle now emits; `rewrite` strips it again because the dev backend runs
+    // without TREK_BASE_PATH and still expects root-relative paths. Both are
+    // no-ops when BASE_NO_SLASH is ''.
     proxy: {
-      '/api': {
+      [withBase('/api')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/plugin-frame': {
+      [withBase('/plugin-frame')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/uploads': {
+      [withBase('/uploads')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/ws': {
+      [withBase('/ws')]: {
         target: API_TARGET,
         ws: true,
+        rewrite: stripBasePrefix,
       },
-      '/mcp': {
+      [withBase('/mcp')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
       // OAuth 2.1 endpoints handled by backend (SDK authorize handler + token/revoke)
       // /oauth/authorize goes to backend so the SDK can redirect to /oauth/consent
       // /oauth/consent is served by Vite as a SPA route (no proxy entry needed)
-      '/oauth/authorize': {
+      [withBase('/oauth/authorize')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/oauth/token': {
+      [withBase('/oauth/token')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/oauth/register': {
+      [withBase('/oauth/register')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/oauth/revoke': {
+      [withBase('/oauth/revoke')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
-      '/.well-known': {
+      [withBase('/.well-known')]: {
         target: API_TARGET,
         changeOrigin: true,
+        rewrite: stripBasePrefix,
       },
     },
   },

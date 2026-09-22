@@ -10,6 +10,7 @@ import { useToast } from '../../components/shared/Toast'
 import { managedAdminTabs } from '../../managed'
 import type { AdminUser, AdminStats, OidcConfig, UpdateInfo } from './adminModel'
 import type { TransitProvider, TransitKeySource } from '@trek/shared'
+import { BASE_NO_SLASH } from '../../utils/basePath'
 
 /**
  * Every tab id AdminPage can render a panel for, whatever this install offers.
@@ -400,7 +401,7 @@ export function useAdmin() {
       setShowCreateInvite(false)
       setInviteForm({ max_uses: 1, expires_in_days: 7, trip_id: '' })
       // Copy link to clipboard
-      const link = `${window.location.origin}/register?invite=${data.invite.token}`
+      const link = `${window.location.origin}${BASE_NO_SLASH}/register?invite=${data.invite.token}`
       navigator.clipboard.writeText(link).then(() => toast.success(t('admin.invite.copied')))
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, t('admin.invite.createError')))
@@ -418,7 +419,7 @@ export function useAdmin() {
   }
 
   const copyInviteLink = (token: string) => {
-    const link = `${window.location.origin}/register?invite=${token}`
+    const link = `${window.location.origin}${BASE_NO_SLASH}/register?invite=${token}`
     navigator.clipboard.writeText(link).then(() => toast.success(t('admin.invite.copied')))
   }
 

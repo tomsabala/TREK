@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { pluginsEnabled } from '../kill-switch';
 import { PluginOAuthService } from './plugin-oauth.service';
 import { DatabaseService } from '../../database/database.service';
+import { withBasePath } from '../../../app-config/base-path';
 
 /**
  * Host-brokered outbound OAuth endpoints (#plugins). All are gated by JwtAuthGuard —
@@ -48,7 +49,7 @@ export class PluginOAuthController {
     @Res() res: Response,
   ): Promise<void> {
     const userId = req.user?.id;
-    const back = (status: string) => res.redirect(`/settings?oauth=${encodeURIComponent(id)}:${status}`);
+    const back = (status: string) => res.redirect(withBasePath(`/settings?oauth=${encodeURIComponent(id)}:${status}`));
     if (!pluginsEnabled() || userId == null || !this.isActive(id)) return back('unavailable');
     if (error || !code || !state) return back('denied');
     try {

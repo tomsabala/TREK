@@ -15,6 +15,7 @@ import { clearAllPluginSessions } from './pluginStore'
 import { forgetStartDestination } from '../utils/startDestination'
 import { forgetServerLanguage } from './settingsStore'
 import { markSignedOut, clearSignedOut } from '../utils/signedOut'
+import { withBase } from '../utils/basePath'
 
 interface AuthResponse {
   user: User
@@ -259,7 +260,7 @@ export const useAuthStore = create<AuthState>()(
     // connection, with nothing cached to answer from.
     setForcedOffline(false)
     // 4. Tell server to clear the httpOnly cookie (best-effort).
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
+    await fetch(withBase('/api/auth/logout'), { method: 'POST', credentials: 'include' }).catch(() => {})
     // 5. Clear service worker caches containing sensitive data.
     if ('caches' in window) {
       await Promise.all([

@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import type { User } from '../../types';
+import { readEnv } from '../../app-config';
 import { ADDON_IDS } from '../../addons';
 import { AddonGuard } from '../addons/addon.guard';
 import { RequireAddon } from '../addons/require-addon.decorator';
@@ -431,6 +432,10 @@ function sameOrigin(a: string | null | undefined, b: string): boolean {
  * polling carries the binding.
  */
 function publicOrigin(req: Request): string | null {
+  // APP_URL first (same pattern as feeds.controller.ts): it is the only source
+  // that carries the mount path, which a Host header cannot.
+  const configured = (readEnv().app.appUrl || '').replace(/\/+$/, '');
+  if (configured) return configured;
   const host = req.get('x-forwarded-host') || req.get('host');
   if (!host) return null;
   const proto = (req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim();

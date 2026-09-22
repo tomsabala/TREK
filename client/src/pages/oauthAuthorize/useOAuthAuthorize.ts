@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore'
 import { oauthApi } from '../../api/client'
 import { SCOPE_GROUPS } from '../../api/oauthScopes'
 import { useTranslation } from '../../i18n'
+import { withBase } from '../../utils/basePath'
 
 interface ValidateResult {
   valid: boolean
@@ -132,8 +133,10 @@ export function useOAuthAuthorize() {
   }
 
   function handleLoginRedirect() {
+    // `next` stays app-relative: the login page hands it to navigate(), which
+    // re-applies the router basename. Only the document-level href is prefixed.
     const next = '/oauth/consent?' + params.toString() + window.location.hash
-    window.location.href = '/login?redirect=' + encodeURIComponent(next)
+    window.location.href = withBase('/login?redirect=' + encodeURIComponent(next))
   }
 
   // Group requested scopes by their translated group name

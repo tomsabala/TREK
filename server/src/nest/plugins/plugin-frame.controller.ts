@@ -6,6 +6,7 @@ import { pluginsEnabled } from './kill-switch';
 import { PluginRuntimeService } from './plugin-runtime.service';
 import { pluginCodeDir } from './paths';
 import { Public } from '../auth/public.decorator';
+import { basePath } from '../../app-config/base-path';
 
 /**
  * Serves a page/widget plugin's static client from /plugin-frame/:id/* (#plugins,
@@ -120,7 +121,7 @@ export class PluginFrameController {
     // response), and a missing/odd Host just falls back to inline-only.
     const ownAssets =
       host && /^[a-z0-9.-]+(:\d+)?$/i.test(host) && /^[a-z][a-z0-9-]{2,39}$/.test(pluginId)
-        ? ` ${host}/plugin-frame/${pluginId}/`
+        ? ` ${host}${basePath()}/plugin-frame/${pluginId}/`
         : '';
     const connect = ["'self'", ...outbound.map((h) => `https://${h}`)].join(' ');
     return [

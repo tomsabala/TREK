@@ -416,8 +416,10 @@ describe('SpaFallbackFilter', () => {
   const original = process.env.NODE_ENV;
   afterEach(() => { process.env.NODE_ENV = original; });
 
-  function host(req: { method: string }, res: ReturnType<typeof makeRes>) {
-    return { switchToHttp: () => ({ getRequest: () => req, getResponse: () => res }) } as never;
+  function host(req: { method: string; path?: string }, res: ReturnType<typeof makeRes>) {
+    return {
+      switchToHttp: () => ({ getRequest: () => ({ path: '/dashboard', ...req }), getResponse: () => res }),
+    } as never;
   }
 
   it('serves index.html for an unmatched GET in production', () => {
@@ -442,6 +444,16 @@ describe('SpaFallbackFilter', () => {
     new SpaFallbackFilter().catch(new NotFoundException('missing'), host({ method: 'GET' }, res));
     expect(res.statusCode).toBe(404);
     expect(res.body).toEqual({ error: 'missing' });
+  });
+
+  it('keeps the JSON 404 envelope for an unmatched API or uploads GET in production', () => {
+    process.env.NODE_ENV = 'production';
+    for (const path of ['/api/nope', '/uploads/missing.jpg']) {
+      const res = makeRes();
+      new SpaFallbackFilter().catch(new NotFoundException('gone'), host({ method: 'GET', path }, res));
+      expect(res.statusCode).toBe(404);
+      expect(res.body).toEqual({ error: 'gone' });
+    }
   });
 
   it('falls back to Not Found when the exception has no message', () => {

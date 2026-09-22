@@ -1,3 +1,5 @@
+import { BASE } from '../../utils/basePath'
+
 /**
  * Handing the book to the printer.
  *
@@ -131,7 +133,7 @@ export function printSheets(input: PrintSheetsInput): () => void {
 <head>
 <meta charset="utf-8">
 <title>${escapeText(input.title)}</title>
-<base href="${escapeAttr(window.location.origin)}/">
+<base href="${escapeAttr(window.location.origin + BASE)}">
 ${collectStyles()}
 <style>
   /*

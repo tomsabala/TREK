@@ -39,6 +39,7 @@ import { resolveBasemap } from '../utils/tileUrl';
 import { useSharedTrip } from './sharedTrip/useSharedTrip';
 import { SharedPlaceDetails } from './sharedTrip/SharedPlaceDetails';
 import { SharedBookingDetails } from './sharedTrip/SharedBookingDetails';
+import { withBase } from '../utils/basePath'
 
 const TRANSPORT_ICONS = { flight: Plane, train: Train, bus: Bus, car: Car, cruise: Ship };
 
@@ -221,7 +222,7 @@ export default function SharedTripPage() {
             style={{
               position: 'absolute',
               inset: 0,
-              backgroundImage: `url(${trip.cover_image.startsWith('http') ? trip.cover_image : trip.cover_image.startsWith('/') ? trip.cover_image : '/uploads/' + trip.cover_image})`,
+              backgroundImage: `url(${trip.cover_image.startsWith('http') ? trip.cover_image : withBase(trip.cover_image.startsWith('/') ? trip.cover_image : '/uploads/' + trip.cover_image)})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               opacity: 0.15,
@@ -253,7 +254,7 @@ export default function SharedTripPage() {
             border: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          <img src="/icons/icon-white.svg" alt="TREK" width="26" height="26" />
+          <img src={withBase('/icons/icon-white.svg')} alt="TREK" width="26" height="26" />
         </div>
 
         <div
@@ -1211,7 +1212,7 @@ export default function SharedTripPage() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
-            <img src="/icons/icon.svg" alt="TREK" width="18" height="18" style={{ borderRadius: 4 }} />
+            <img src={withBase('/icons/icon.svg')} alt="TREK" width="18" height="18" style={{ borderRadius: 4 }} />
             <span className="text-[#9ca3af]" style={{ fontSize: 'calc(11px * var(--fs-scale-caption, 1))' }}>
               {t('shared.sharedVia')} <strong className="text-[#6b7280]">TREK</strong>
             </span>

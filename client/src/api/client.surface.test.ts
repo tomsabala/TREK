@@ -1,4 +1,4 @@
-// FE-APISURF-001 to FE-APISURF-054
+// FE-APISURF-001 to FE-APISURF-056
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { AxiosResponse } from 'axios'
 import { http, HttpResponse } from 'msw'
@@ -10,6 +10,7 @@ import {
   mapsApi, airportsApi, budgetApi, filesApi, reservationsApi, healthApi, weatherApi,
   configApi, helpApi, settingsApi, accommodationsApi, dayNotesApi, collabApi, backupApi,
   shareApi, transitApi, tripInviteApi, notificationsApi, inAppNotificationsApi, memoriesApi,
+  docsyncApi,
 } from './client'
 
 interface Recorded { method: string; url: string; body: unknown }
@@ -413,9 +414,22 @@ describe('client > endpoint wiring', () => {
     expect(rec.url).toBe('/api/integrations/memories/synologyphotos/albums/alb-2/photos?passphrase=p%2Fw%3F')
   })
 
+  /**
+   * The one call in this file that is deliberately TWO requests, which is why it is not
+   * in the list above: a search asks TREK's own indexes and any installed search-provider
+   * plugin at the same time, and the caller gets one list back (#2221).
+   */
+  it('FE-APISURF-055: mapsApi.search asks the core index and the plugin providers side by side', async () => {
+    log = []
+    await mapsApi.search('Rome')
+    expect(log.map(r => `${r.method} ${r.url.split('?')[0]}`).sort()).toEqual([
+      'GET /api/plugin-search',
+      'POST /api/maps/search',
+    ])
+  })
+
   it('FE-APISURF-016: mapsApi and airportsApi map the geo endpoints', async () => {
     await assertCalls([
-      { n: 'maps.search', r: () => mapsApi.search('Rome'), e: 'POST /api/maps/search' },
       { n: 'maps.autocomplete', r: () => mapsApi.autocomplete('Rom'), e: 'POST /api/maps/autocomplete' },
       { n: 'maps.details', r: () => mapsApi.details('place/1'), e: 'GET /api/maps/details/place%2F1' },
       { n: 'maps.placePhoto', r: () => mapsApi.placePhoto('place/1'), e: 'GET /api/maps/place-photo/place%2F1' },
@@ -651,6 +665,12 @@ describe('client > request payloads', () => {
     const rec = await traceOne(() => authApi.passkey.delete(3, 'hunter2'))
     expect(rec.method).toBe('DELETE')
     expect(rec.body).toEqual({ password: 'hunter2' })
+  })
+
+  it('FE-APISURF-056: docsyncApi.createScope names the connection in the path only', async () => {
+    const rec = await traceOne(() => docsyncApi.createScope(1, 5, 'Norway'))
+    expect(`${rec.method} ${rec.url}`).toBe('POST /api/trips/1/docsync/connections/5/scopes')
+    expect(rec.body).toEqual({ name: 'Norway' })
   })
 })
 

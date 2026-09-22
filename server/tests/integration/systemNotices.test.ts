@@ -227,45 +227,64 @@ describe('GET /api/system-notices/active', () => {
     }
   });
 
-  // The release notes carry the support links, so the promise is exact: once per
-  // update for every user, whatever they did with it before, and never again on a
-  // reload of the same version. Driven through the real registry entry and the real
-  // dismiss route, so neither half can drift away from the other unnoticed.
-  it('shows the release notes once per update, however often they were closed before', async () => {
-    const { user } = createUser(testDb);
-    testDb.prepare('UPDATE users SET login_count = 5, first_seen_version = ? WHERE id = ?').run('3.0.0', user.id);
-
-    const shows = async () => {
-      const res = await request(app)
-        .get('/api/system-notices/active')
-        .set('Cookie', authCookie(user.id));
-      expect(res.status).toBe(200);
-      return res.body.some((n: { id: string }) => n.id === 'release-notes');
+  // The dismiss route and the per-version window are two halves of one promise:
+  // a recurring notice comes back once per update for every user, whatever they
+  // did with it before, and never again on a reload of the same version. Driven
+  // through the real dismiss route on a notice this test owns, so neither half
+  // can drift away from the other unnoticed.
+  it('shows a per-version notice once per update, however often it was closed before', async () => {
+    const PER_UPDATE: SystemNotice = {
+      id: 'test-per-update-notice',
+      display: 'modal',
+      severity: 'info',
+      titleKey: 'system_notice.test_per_update_notice.title',
+      bodyKey: 'system_notice.test_per_update_notice.body',
+      dismissible: true,
+      conditions: [],
+      recurring: 'per-version',
+      publishedAt: '2026-01-01T00:00:00Z',
+      priority: 0,
     };
-    const dismiss = async () => {
-      const res = await request(app)
-        .post('/api/system-notices/release-notes/dismiss')
-        .set('Cookie', authCookie(user.id));
-      expect(res.status).toBe(204);
-    };
+    SYSTEM_NOTICES.push(PER_UPDATE);
+    try {
+      const { user } = createUser(testDb);
+      testDb.prepare('UPDATE users SET login_count = 5, first_seen_version = ? WHERE id = ?').run('3.0.0', user.id);
 
-    expect(await shows()).toBe(true);
+      const shows = async () => {
+        const res = await request(app)
+          .get('/api/system-notices/active')
+          .set('Cookie', authCookie(user.id));
+        expect(res.status).toBe(200);
+        return res.body.some((n: { id: string }) => n.id === PER_UPDATE.id);
+      };
+      const dismiss = async () => {
+        const res = await request(app)
+          .post(`/api/system-notices/${PER_UPDATE.id}/dismiss`)
+          .set('Cookie', authCookie(user.id));
+        expect(res.status).toBe(204);
+      };
 
-    // Closed on this version: gone for every reload after it.
-    await dismiss();
-    expect(await shows()).toBe(false);
-    expect(await shows()).toBe(false);
+      expect(await shows()).toBe(true);
 
-    // The next update brings it back, although it was closed before...
-    testDb.prepare(
-      'UPDATE user_notice_dismissals SET dismissed_app_version = ? WHERE user_id = ? AND notice_id = ?'
-    ).run('4.0.0', user.id, 'release-notes');
-    expect(await shows()).toBe(true);
-    expect(await shows()).toBe(true);
+      // Closed on this version: gone for every reload after it.
+      await dismiss();
+      expect(await shows()).toBe(false);
+      expect(await shows()).toBe(false);
 
-    // ...and closing it again holds until the one after that.
-    await dismiss();
-    expect(await shows()).toBe(false);
+      // The next update brings it back, although it was closed before...
+      testDb.prepare(
+        'UPDATE user_notice_dismissals SET dismissed_app_version = ? WHERE user_id = ? AND notice_id = ?'
+      ).run('0.0.1', user.id, PER_UPDATE.id);
+      expect(await shows()).toBe(true);
+      expect(await shows()).toBe(true);
+
+      // ...and closing it again holds until the one after that.
+      await dismiss();
+      expect(await shows()).toBe(false);
+    } finally {
+      const idx = SYSTEM_NOTICES.indexOf(PER_UPDATE);
+      if (idx !== -1) SYSTEM_NOTICES.splice(idx, 1);
+    }
   });
 });
 

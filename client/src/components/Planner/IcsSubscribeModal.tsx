@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { X, RefreshCw, Calendar, Power } from 'lucide-react'
 import { SubscribeLinks } from './SubscribeLinks'
+import { withBase } from '../../utils/basePath'
 
 interface IcsSubscribeModalProps {
   /** Token endpoint base, e.g. `/api/trips/123/feed` or `/api/feed/user`. */
@@ -17,7 +18,7 @@ interface IcsSubscribeModalProps {
 function absolutize(url: string): string {
   if (!url) return ''
   if (/^https?:\/\//i.test(url)) return url
-  if (url.startsWith('/')) return window.location.origin + url
+  if (url.startsWith('/')) return window.location.origin + withBase(url)
   return url
 }
 

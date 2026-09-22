@@ -5,6 +5,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { pickGradient } from '../../../pages/journeyDetail/JourneyDetailPage.helpers'
+import { withBase } from '../../../utils/basePath'
 
 export interface MoodMeta {
   id: string
@@ -59,7 +60,7 @@ export function journeyWeatherCategory(main: string, description: string): strin
 /** Journey cover_image is stored relative — prefix /uploads/ unless it already is. */
 export function journeyCoverSrc(coverImage: string | null | undefined): string | null {
   if (!coverImage) return null
-  return coverImage.startsWith('/uploads/') ? coverImage : `/uploads/${coverImage}`
+  return withBase(coverImage.startsWith('/uploads/') ? coverImage : `/uploads/${coverImage}`)
 }
 
 /** Cover surface for cards: photo when present, deterministic gradient otherwise. */

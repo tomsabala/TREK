@@ -15,7 +15,9 @@ const repoRoot = path.resolve(__dirname, '../../..');
 const readDockerfileSubdirs = (): Set<string> => {
   const source = fs.readFileSync(path.join(repoRoot, 'Dockerfile'), 'utf8');
   const found = new Set<string>();
-  for (const m of source.matchAll(/\/app\/uploads\/([A-Za-z0-9_-]+)/g)) found.add(m[1]);
+  // The real uploads tree lives under /app/data/uploads (one stateful root, so a
+  // single mounted volume carries all of it); /app/uploads is a symlink to it.
+  for (const m of source.matchAll(/\/app\/data\/uploads\/([A-Za-z0-9_-]+)/g)) found.add(m[1]);
   return found;
 };
 

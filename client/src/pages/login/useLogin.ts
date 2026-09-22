@@ -8,6 +8,7 @@ import { wasSignedOut } from '../../utils/signedOut'
 import { authApi, configApi } from '../../api/client'
 import { getApiErrorMessage } from '../../types'
 import { START_DESTINATION_ROUTE } from '../../utils/startDestination'
+import { withBase } from '../../utils/basePath'
 
 interface AppConfig {
   has_users: boolean
@@ -133,10 +134,10 @@ export function useLogin() {
     if (oidcCode) {
       exchangeInitiated.current = true
       setIsLoading(true)
-      fetch('/api/auth/oidc/exchange?code=' + encodeURIComponent(oidcCode), { credentials: 'include' })
+      fetch(withBase('/api/auth/oidc/exchange?code=' + encodeURIComponent(oidcCode)), { credentials: 'include' })
         .then(r => r.json())
         .then(async data => {
-          window.history.replaceState({}, '', '/login')
+          window.history.replaceState({}, '', withBase('/login'))
           if (data.token) {
             await loadUser()
             const savedRedirect = sessionStorage.getItem('oidc_redirect') || START_DESTINATION_ROUTE
@@ -147,7 +148,7 @@ export function useLogin() {
           }
         })
         .catch(() => {
-          window.history.replaceState({}, '', '/login')
+          window.history.replaceState({}, '', withBase('/login'))
           setError(t('login.oidcFailed'))
         })
         .finally(() => setIsLoading(false))
@@ -163,7 +164,7 @@ export function useLogin() {
       }
       setError(errorMessages[oidcError] || oidcError)
       sessionStorage.removeItem('oidc_redirect')
-      window.history.replaceState({}, '', '/login')
+      window.history.replaceState({}, '', withBase('/login'))
       return
     }
 
@@ -188,7 +189,7 @@ export function useLogin() {
           if (!fromCache && !config.password_login && config.oidc_login && config.oidc_configured && config.has_users && !invite && !noRedirect) {
             // No switch to consult on this path: OIDC-only always asks for the
             // remembered lifetime, matching the SSO button on the panel (#1927).
-            window.location.href = '/api/auth/oidc/login?remember=1'
+            window.location.href = withBase('/api/auth/oidc/login?remember=1')
           }
         }
       })

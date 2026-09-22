@@ -8,6 +8,7 @@ import { useTranslation } from '../../../../i18n'
 import { INNER_CLS, TileHeader } from './MTripSheetUi'
 import type { MTripSheetsProps } from '../MTripShell'
 import type { LucideIcon } from 'lucide-react'
+import { withBase } from '../../../../utils/basePath'
 
 /**
  * Export sheet ('export', opened from the Mehr sheet): the desktop day-plan
@@ -64,7 +65,7 @@ export default function MExportSheet({ planner, shell }: MTripSheetsProps) {
     if (icsBusy) return
     setIcsBusy(true)
     try {
-      const res = await fetch(`/api/trips/${planner.tripId}/export.ics`, { credentials: 'include' })
+      const res = await fetch(withBase(`/api/trips/${planner.tripId}/export.ics`), { credentials: 'include' })
       if (!res.ok) throw new Error()
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -91,7 +92,7 @@ export default function MExportSheet({ planner, shell }: MTripSheetsProps) {
     if (gpxBusy) return
     setGpxBusy(true)
     try {
-      const res = await fetch(`/api/trips/${planner.tripId}/places/export.gpx`, { credentials: 'include' })
+      const res = await fetch(withBase(`/api/trips/${planner.tripId}/places/export.gpx`), { credentials: 'include' })
       if (res.status === 404) { planner.toast.info(t('dayplan.gpxEmpty')); return }
       if (!res.ok) throw new Error()
       const blob = await res.blob()

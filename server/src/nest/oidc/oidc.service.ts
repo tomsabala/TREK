@@ -14,6 +14,7 @@ import { setAuthCookie, RememberOption } from '../common/cookie';
 import { AuthService } from '../auth/auth.service';
 import { DatabaseService } from '../database/database.service';
 import { safeFetchAdminConfigured } from '../../utils/ssrfGuard';
+import { withBasePath } from '../../app-config/base-path';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -440,7 +441,9 @@ export class OidcService implements OnModuleDestroy {
   frontendUrl(path: string): string {
     // Case-sensitive on purpose (legacy parity).
     const base = readEnv().app.nodeEnv === 'production' ? '' : 'http://localhost:5173';
-    return base + path;
+    // Every OIDC success/error redirect passes a bare root-absolute path; under a
+    // mount prefix an unprefixed one lands outside the app entirely.
+    return base + withBasePath(path);
   }
 
   generateToken(user: { id: number }, remember?: boolean): string {

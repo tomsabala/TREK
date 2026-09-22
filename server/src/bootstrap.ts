@@ -19,6 +19,7 @@ import { validateManagedRoutes } from './nest/common/validate-managed-routes';
 import { TrekWsAdapter } from './nest/realtime/trek-ws.adapter';
 import { StorageService } from './nest/storage/storage.service';
 import { MAX_COLLECTION_FILE_BYTES } from '@trek/shared';
+import { basePath } from './app-config/base-path';
 
 /**
  * Builds the unified TREK NestJS application that serves the ENTIRE surface — the
@@ -66,6 +67,28 @@ export function getHttpServer(): nodeHttp.Server {
   return boundHttpServer;
 }
 
+/**
+ * Serves `instance` under TREK_BASE_PATH when one is configured.
+ *
+ * The apps gateway does NOT strip the prefix (it routes with `handle`, not
+ * `handle_path`), so the prefix has to be absorbed here. Absorbing it with a
+ * sub-app mount — rather than prefixing every mount string — keeps every
+ * downstream mount ('/uploads/*', express.static, the pathless /.well-known
+ * router) and every req.path predicate in its root-relative form, so upstream
+ * rebases stay small.
+ */
+function mountUnderBasePath(instance: express.Express): express.Express {
+  const base = basePath();
+  if (!base) return instance;
+  const root = express();
+  root.use(base, instance);
+  // Un-prefixed fallback: the in-container HEALTHCHECK, compose and Helm probes
+  // all hit http://localhost:3000/api/health. Nothing outside the container
+  // routes here — the gateway only ever sends prefixed paths.
+  root.use(instance);
+  return root;
+}
+
 export async function buildApp(): Promise<INestApplication> {
   // rawBody keeps the unparsed request bytes on req.rawBody so a plugin webhook
   // route can verify a provider's HMAC signature over the exact payload (the
@@ -79,7 +102,7 @@ export async function buildApp(): Promise<INestApplication> {
   // Nest's own internal http server, which this process never listens on: the
   // boot succeeds, the gateway logs as registered, every test passes, and no
   // browser can connect. Callers take the server from getHttpServer() below.
-  boundHttpServer = nodeHttp.createServer(instance);
+  boundHttpServer = nodeHttp.createServer(mountUnderBasePath(instance));
   app.useWebSocketAdapter(new TrekWsAdapter(boundHttpServer));
   // ConfigModule.forRoot's load factories already ran inside NestFactory.create,
   // so the boot-stable snapshot is resolvable here, BEFORE app.init() — this is

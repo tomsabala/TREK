@@ -8,6 +8,7 @@ import JournalBody from './JournalBody'
 import { useTranslation } from '../../i18n'
 import { formatLocationName } from '../../utils/formatters'
 import type { JourneyEntry, JourneyPhoto } from '../../store/journeyStore'
+import { withBase } from '../../utils/basePath'
 
 // Labels are translation keys, like the desktop tables in
 // pages/journeyDetail/JourneyDetailPage.constants.ts. The colour classes stay
@@ -35,7 +36,7 @@ function photoUrl(
   builder?: (id: number, size?: 'thumbnail' | 'original') => string
 ): string {
   if (builder) return builder(p.photo_id, size)
-  return `/api/photos/${p.photo_id}/${size}`
+  return withBase(`/api/photos/${p.photo_id}/${size}`)
 }
 
 interface Props {

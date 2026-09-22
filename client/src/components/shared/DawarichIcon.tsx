@@ -1,5 +1,6 @@
 import React from 'react'
 import BrandIcon, { type BrandIconProps } from './BrandIcon'
+import { withBase } from '../../utils/basePath'
 
 /**
  * Dawarich's own mark, unmodified: green and grey map blocks behind the blue
@@ -10,5 +11,5 @@ import BrandIcon, { type BrandIconProps } from './BrandIcon'
  * markup, and why it keeps its own colours.
  */
 export default function DawarichIcon(props: BrandIconProps): React.ReactElement {
-  return <BrandIcon src="/brands/dawarich.svg" {...props} />
+  return <BrandIcon src={withBase('/brands/dawarich.svg')} {...props} />
 }

@@ -13,6 +13,7 @@ import ApiKeysSection from './ApiKeysSection'
 import { PRESET_SCOPES_DEFAULT, PRESET_SCOPES_READONLY } from '../../api/oauthScopes'
 import ScopeGroupPicker from '../OAuth/ScopeGroupPicker'
 import { useAuthStore } from '../../store/authStore'
+import { BASE_NO_SLASH } from '../../utils/basePath'
 
 interface OAuthPreset {
   id: string
@@ -172,7 +173,7 @@ function useIntegrations() {
     return () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current) }
   }, [])
 
-  const mcpEndpoint = `${window.location.origin}/mcp`
+  const mcpEndpoint = `${window.location.origin}${BASE_NO_SLASH}/mcp`
   const mcpJsonConfigOAuth = `{
   "mcpServers": {
     "trek": {

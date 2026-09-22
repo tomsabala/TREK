@@ -8,6 +8,7 @@ import {
 import type { Journey } from '../store/journeyStore'
 import { computeJourneyLifecycle } from '../utils/journeyLifecycle'
 import { useJourney } from './journey/useJourney'
+import { withBase } from '../utils/basePath'
 
 const GRADIENTS = [
   'linear-gradient(135deg, #0F172A 0%, #6366F1 45%, #EC4899 100%)',
@@ -128,7 +129,7 @@ function JourneyPageDesktop() {
                   className="block w-full text-left relative rounded-[28px] overflow-hidden cursor-pointer h-[250px] md:h-[280px] transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 shadow-[0_2px_4px_rgba(0,0,0,0.06),0_20px_48px_-18px_rgba(0,0,0,0.32)]"
                   style={{
                     background: activeJourney.cover_image
-                      ? `linear-gradient(120deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.05) 100%), url(/uploads/${activeJourney.cover_image}) center/cover`
+                      ? `linear-gradient(120deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.05) 100%), url(${withBase(`/uploads/${activeJourney.cover_image}`)}) center/cover`
                       : pickGradient(activeJourney.id),
                     willChange: 'transform',
                   }}
@@ -383,7 +384,7 @@ function JourneyCard({ journey, onClick }: { journey: Journey & { entry_count?: 
       {/* Cover with title overlay */}
       <div className="relative h-[200px] overflow-hidden" style={{ background: pickGradient(j.id) }}>
         {j.cover_image && (
-          <img src={`/uploads/${j.cover_image}`} className="absolute inset-0 w-full h-full object-cover" alt="" />
+          <img src={withBase(`/uploads/${j.cover_image}`)} className="absolute inset-0 w-full h-full object-cover" alt="" />
         )}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.62) 100%)' }} />
 

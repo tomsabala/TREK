@@ -28,6 +28,7 @@ import {
   type TrekWebSocket,
 } from './ws-state';
 import { JourneyDomainService } from '../journey/journey-domain.service';
+import { withBasePath } from '../../app-config/base-path';
 
 const HEARTBEAT_INTERVAL = 30_000;
 
@@ -50,7 +51,7 @@ const HEARTBEAT_INTERVAL = 30_000;
  * `{ event, data }` and every deployed client speaks the former.
  */
 @Injectable()
-@WebSocketGateway({ path: '/ws' })
+@WebSocketGateway({ path: withBasePath('/ws') })
 export class RealtimeGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
 {

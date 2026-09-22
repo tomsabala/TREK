@@ -4,6 +4,7 @@ import { moodMeta, weatherMeta } from '../../mobile/screens/journey/mobileJourne
 import CountryFlag from '../shared/CountryFlag'
 import { cardDateLabel, cardPhotoId, cardPlace, cardTitle, type CardPhoto } from './journeyCard'
 import type { JourneyEntry } from '../../store/journeyStore'
+import { withBase } from '../../utils/basePath'
 
 /**
  * One entry of the phone timeline: the photo IS the card.
@@ -70,7 +71,7 @@ export default function JourneyEntryCover({
   const isSuggestion = entry.type === 'skeleton'
 
   const photoId = cardPhotoId(entry.photos?.[0])
-  const src = photoId == null ? null : photoUrlFor ? photoUrlFor(photoId) : `/api/photos/${photoId}/thumbnail`
+  const src = photoId == null ? null : photoUrlFor ? photoUrlFor(photoId) : withBase(`/api/photos/${photoId}/thumbnail`)
 
   const title = cardTitle(entry, t)
   const place = cardPlace(entry)

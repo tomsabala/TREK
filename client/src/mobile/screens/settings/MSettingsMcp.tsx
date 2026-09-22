@@ -11,6 +11,7 @@ import MChip from '../../components/MChip'
 import { MSetCard, MSetEyebrow, MSetInput, MSetTextarea, MSetButton, MSetHint, MSetRow } from './MSettingsUi'
 import MConfirmSheet from './MConfirmSheet'
 import MSegmented from '../../components/MSegmented'
+import { BASE_NO_SLASH } from '../../../utils/basePath'
 
 interface OAuthPreset {
   id: string
@@ -134,7 +135,7 @@ export default function MSettingsMcp() {
     oauthApi.sessions.list().then((d) => setSessions(d.sessions || [])).catch(() => {})
   }, [])
 
-  const mcpEndpoint = `${window.location.origin}/mcp`
+  const mcpEndpoint = `${window.location.origin}${BASE_NO_SLASH}/mcp`
   const jsonConfigOAuth = `{
   "mcpServers": {
     "trek": {

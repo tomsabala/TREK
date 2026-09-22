@@ -72,6 +72,7 @@ import {
 import { getSocketId } from './websocket'
 import { probeNow } from '../sync/connectivity'
 import { downloadBlob } from '../utils/fileDownload'
+import { withBase, stripBase } from '../utils/basePath'
 
 /**
  * Validate a response payload against its @trek/shared Zod schema — but only in
@@ -145,7 +146,7 @@ function translateRateLimit(): string {
 }
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: withBase('/api'),
   withCredentials: true,
   timeout: 8000,
   headers: {
@@ -175,6 +176,8 @@ apiClient.interceptors.request.use(
 )
 
 export function isAuthPublicPath(pathname: string): boolean {
+  // Route paths are app-relative; the browser pathname carries the mount prefix.
+  pathname = stripBase(pathname)
   const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password']
   const publicPrefixes = ['/shared/', '/public/']
   return publicPaths.includes(pathname) || publicPrefixes.some((p) => pathname.startsWith(p))
@@ -247,16 +250,18 @@ apiClient.interceptors.response.use(
       if (error.response?.status === 401 && (error.response?.data as { code?: string } | undefined)?.code === 'AUTH_REQUIRED') {
         const { pathname } = window.location
         if (!isAuthPublicPath(pathname)) {
-          const currentPath = pathname + window.location.search + window.location.hash
-          window.location.href = '/login?redirect=' + encodeURIComponent(currentPath)
+          // `redirect` is consumed by navigate(), which re-applies the router
+          // basename — so it must be app-relative, prefix stripped.
+          const currentPath = stripBase(pathname) + window.location.search + window.location.hash
+          window.location.href = withBase('/login?redirect=' + encodeURIComponent(currentPath))
         }
       }
       if (
           error.response?.status === 403 &&
           (error.response?.data as { code?: string } | undefined)?.code === 'MFA_REQUIRED' &&
-          !window.location.pathname.startsWith('/settings')
+          !stripBase(window.location.pathname).startsWith('/settings')
       ) {
-        window.location.href = '/settings?mfa=required'
+        window.location.href = withBase('/settings?mfa=required')
       }
       if (error.response?.status === 429) {
         const translated = translateRateLimit()
@@ -623,7 +628,7 @@ export const adminApi = {
     model: string,
     onProgress: (p: { status?: string; total?: number; completed?: number; error?: string }) => void,
   ): Promise<void> => {
-    const res = await fetch('/api/admin/llm/local/pull', {
+    const res = await fetch(withBase('/api/admin/llm/local/pull'), {
       method: 'POST',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
@@ -930,7 +935,7 @@ export const pluginsApi = {
   // the prefix or points off-origin. Without this a plugin could send
   // sub='/../../auth/me' and drive arbitrary authenticated /api routes as the user.
   invoke: (id: string, sub: string, init?: { method?: string; body?: unknown }) => {
-    const prefix = `/api/plugins/${id}/`
+    const prefix = withBase(`/api/plugins/${id}/`)
     let resolved: URL
     try {
       resolved = new URL(String(sub).replace(/^\/+/, ''), window.location.origin + prefix)
@@ -940,7 +945,7 @@ export const pluginsApi = {
     if (resolved.origin !== window.location.origin || !resolved.pathname.startsWith(prefix)) {
       return Promise.reject(new Error('plugin route escapes its namespace'))
     }
-    const url = resolved.pathname.slice('/api'.length) + resolved.search
+    const url = resolved.pathname.slice(withBase('/api').length) + resolved.search
     return apiClient.request({ url, method: init?.method || 'GET', data: init?.body }).then(r => r.data)
   },
 }
@@ -1506,7 +1511,7 @@ export const backupApi = {
   list: () => apiClient.get('/backup/list').then(r => r.data),
   create: () => apiClient.post('/backup/create').then(r => r.data),
   download: async (filename: string): Promise<void> => {
-    const res = await fetch(`/api/backup/download/${filename}`, {
+    const res = await fetch(withBase(`/api/backup/download/${filename}`), {
       credentials: 'include',
     })
     if (!res.ok) throw new Error('Download failed')

@@ -11,6 +11,7 @@ import ConfirmDialog from '../shared/ConfirmDialog'
 import { pluginsApi } from '../../api/client'
 import { addListener, removeListener } from '../../api/websocket'
 import { useIsPhone } from '../../mobile/useIsPhone'
+import { withBase } from '../../utils/basePath'
 
 // The design-token contract handed to plugins (#4 richer context): non-secret CSS
 // values, resolved for the CURRENT theme, so a plugin can match TREK exactly (and
@@ -688,7 +689,7 @@ export default function PluginFrame({ pluginId, tripId = null, placeId = null, d
         <iframe
           key={pluginId}
           ref={frameRef}
-          src={`/plugin-frame/${pluginId}/${path}`}
+          src={withBase(`/plugin-frame/${pluginId}/${path}`)}
           // Deliver the context as soon as the document is parsed (the plugin sets up its
           // message listener during parse), closing the trek:ready race so the theme is
           // right on first paint. A 2nd load is a self-navigation — don't bridge to it.

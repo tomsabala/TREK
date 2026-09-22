@@ -17,6 +17,7 @@ import { normalizeImageFile } from '../../../utils/convertHeic'
 import { copyText } from '../../../utils/clipboard'
 import { pickGradient } from '../../../pages/journeyDetail/JourneyDetailPage.helpers'
 import { journeyCoverSrc } from './mobileJourneyMeta'
+import { BASE_NO_SLASH } from '../../../utils/basePath'
 
 interface ShareLink {
   token: string
@@ -73,7 +74,7 @@ export default function MJourneySettingsSheet({
   }, [journey.id])
 
   const coverSrc = journeyCoverSrc(journey.cover_image)
-  const shareUrl = shareLink ? `${window.location.origin}/public/journey/${shareLink.token}` : ''
+  const shareUrl = shareLink ? `${window.location.origin}${BASE_NO_SLASH}/public/journey/${shareLink.token}` : ''
 
   const handleSave = async () => {
     setSaving(true)

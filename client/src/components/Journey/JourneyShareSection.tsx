@@ -4,6 +4,7 @@ import { journeyApi } from '../../api/client'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../shared/Toast'
 import { copyText } from '../../utils/clipboard'
+import { BASE_NO_SLASH } from '../../utils/basePath'
 
 export default function JourneyShareSection({ journeyId }: { journeyId: number }) {
   const { t } = useTranslation()
@@ -52,7 +53,7 @@ export default function JourneyShareSection({ journeyId }: { journeyId: number }
     } catch { toast.error(t('journey.share.deleteFailed')) }
   }
 
-  const shareUrl = link ? `${window.location.origin}/public/journey/${link.token}` : ''
+  const shareUrl = link ? `${window.location.origin}${BASE_NO_SLASH}/public/journey/${link.token}` : ''
 
   const copyLink = async () => {
     if (!(await copyText(shareUrl))) return

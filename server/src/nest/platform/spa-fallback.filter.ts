@@ -1,6 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, NotFoundException } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import path from 'node:path';
 import { readEnv } from '../../app-config';
 import { PUBLIC_DIR } from './platform.routes';
 
@@ -26,9 +25,24 @@ export class SpaFallbackFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
 
     // Case-sensitive on purpose (legacy parity).
-    if (readEnv().app.nodeEnv === 'production' && req.method === 'GET') {
+    //
+    // Explicit { root } + basename, not the absolute path: under the Nest
+    // ExpressAdapter — and under the TREK_BASE_PATH sub-app mount, which
+    // rewrites req.url — res.sendFile(absolutePath) resolves against the
+    // rewritten url and 404s spuriously (same trap as
+    // files-download.controller.ts).
+    //
+    // API and uploads misses keep their real 404: answering them with the SPA
+    // shell turns a missing endpoint or a missing file into an HTML body the
+    // client parses as JSON.
+    if (
+      readEnv().app.nodeEnv === 'production' &&
+      req.method === 'GET' &&
+      !req.path.startsWith('/api/') &&
+      !req.path.startsWith('/uploads/')
+    ) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+      res.sendFile('index.html', { root: PUBLIC_DIR });
       return;
     }
 

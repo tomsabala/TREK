@@ -12,6 +12,7 @@ import { pickGradient } from '../../pages/journeyDetail/JourneyDetailPage.helper
 import { AddTripDialog } from './JourneyDetailPageAddTripDialog'
 import { normalizeImageFile } from '../../utils/convertHeic'
 import ToggleSwitch from '../Settings/ToggleSwitch'
+import { withBase } from '../../utils/basePath'
 
 export function JourneySettingsDialog({ journey, onClose, onSaved, onOpenInvite, onRefresh, onRestoreSuggestions }: {
   journey: JourneyDetail
@@ -156,7 +157,7 @@ export function JourneySettingsDialog({ journey, onClose, onSaved, onOpenInvite,
             >
               {journey.cover_image ? (
                 <>
-                  <img src={`/uploads/${journey.cover_image}`} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="" />
+                  <img src={withBase(`/uploads/${journey.cover_image}`)} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="" />
                   <span className="relative z-10 flex items-center gap-1.5"><ImagePlus size={14} /> {t('journey.settings.changeCover')}</span>
                 </>
               ) : (

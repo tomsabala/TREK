@@ -6,6 +6,7 @@ import { IcsSubscribeModal } from './IcsSubscribeModal'
 import { useToast } from '../shared/Toast'
 import type { Trip, Day, Place, Category, AssignmentsMap, Reservation, DayNote } from '../../types'
 import { useSettingsStore } from '../../store/settingsStore'
+import { withBase } from '../../utils/basePath'
 
 /**
  * What a GPX download can carry. Worded by what someone wants on their device
@@ -101,7 +102,7 @@ export function TripExportModal({
     if (busy) return
     setBusy('ics')
     try {
-      const res = await fetch(`/api/trips/${tripId}/export.ics`, { credentials: 'include' })
+      const res = await fetch(withBase(`/api/trips/${tripId}/export.ics`), { credentials: 'include' })
       if (!res.ok) throw new Error()
       saveBlob(await res.blob(), `${fileBase}.ics`)
       onClose()
@@ -116,7 +117,7 @@ export function TripExportModal({
     if (busy) return
     setBusy(`gpx:${key}`)
     try {
-      const res = await fetch(`/api/trips/${tripId}/places/export.gpx${query}`, { credentials: 'include' })
+      const res = await fetch(withBase(`/api/trips/${tripId}/places/export.gpx${query}`), { credentials: 'include' })
       // 404 here means the selection is empty, which is worth its own message:
       // "nothing happened" and "the download broke" look identical otherwise.
       if (res.status === 404) { toast.info(t('dayplan.gpxEmpty')); return }

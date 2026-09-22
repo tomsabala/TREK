@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { readEnv } from '../../app-config';
 import { SESSION_DURATION_MS, SESSION_DURATION_REMEMBER_MS } from '../../config';
+import { basePath } from '../../app-config/base-path';
 
 const COOKIE_NAME = 'trek_session';
 
@@ -50,7 +51,9 @@ function buildOptions(clear: boolean, secure: boolean, remember?: RememberOption
     httpOnly: true,
     secure,
     sameSite: 'lax' as const,
-    path: '/',
+    // Browser-facing: under a mount prefix the session cookie must not be sent
+    // to every other app sharing the origin.
+    path: basePath() || '/',
     ...(clear ? {} : resolveMaxAge(remember)),
   };
 }

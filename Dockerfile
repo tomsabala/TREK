@@ -24,6 +24,10 @@ COPY client/scripts/patch-maplibre.mjs ./client/scripts/
 RUN npm ci --workspace=client
 COPY --from=shared-builder /app/shared/dist ./shared/dist
 COPY client/ ./client/
+# The mount prefix is compiled into the bundle, so it can only enter here.
+# Declared after the npm ci layers so those stay cacheable across prefixes.
+ARG TREK_BASE_PATH=
+ENV TREK_BASE_PATH=${TREK_BASE_PATH}
 RUN npm run build --workspace=client
 
 # ── Stage 3: server ──────────────────────────────────────────────────────────
@@ -100,18 +104,30 @@ COPY --chown=node:node --from=client-builder /app/client/public/fonts ./server/p
 # mount point itself, which fails with EACCES when the bind-mounted host dir
 # isn't writable by node. Only paths this layer creates are chowned; anything
 # already in the image arrived node-owned via --chown above.
-RUN mkdir -p /app/data/logs /app/uploads/files /app/uploads/covers /app/uploads/avatars \
-      /app/uploads/photos /app/uploads/journey /app/uploads/places && \
+#
+# Everything stateful lives under ONE root, /app/data: the apps-gateway broker
+# mounts exactly one volume at one dataPath, and TREK's storage roots are
+# __dirname-derived (server/src/nest/storage/storage-paths.ts) rather than
+# env-relocatable, so the collapse has to happen in the image. LocalDriver
+# realpaths its root at init, so the extra symlink hop is transparent.
+RUN mkdir -p /app/data/logs /app/data/uploads/files /app/data/uploads/covers \
+      /app/data/uploads/avatars /app/data/uploads/photos /app/data/uploads/journey \
+      /app/data/uploads/places && \
+    ln -s /app/data/uploads /app/uploads && \
     ln -s /app/uploads /app/server/uploads && \
     ln -s /app/data /app/server/data && \
-    chown -R node:node /app/data /app/uploads && \
-    chown -h node:node /app/server/uploads /app/server/data
+    chown -R node:node /app/data && \
+    chown -h node:node /app/uploads /app/server/uploads /app/server/data
 
 ENV NODE_ENV=production
 ENV NODE_USE_ENV_PROXY=1
 ENV PORT=3000
 ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION}
+# The server needs the same prefix at runtime: it mounts itself under it, sets
+# the cookie path and the WebSocket path from it.
+ARG TREK_BASE_PATH=
+ENV TREK_BASE_PATH=${TREK_BASE_PATH}
 
 EXPOSE 3000
 

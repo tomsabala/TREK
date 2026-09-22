@@ -106,7 +106,9 @@ export class WebauthnConfigService {
     //    silently union dev localhost origins into a production allow-list.
     let origins = explicitOrigins;
     if (origins.length === 0) {
-      if (appHost) origins = [appUrl.replace(/(?<!\/)\/+$/, '')];
+      // Origin only — APP_URL may carry a mount path ('/a/trek'), and an origin
+      // with a path can never equal the browser's, which breaks passkeys outright.
+      if (appHost) origins = [new URL(appUrl).origin];
       if (rpID === 'localhost') {
         // Dev: the browser origin is the Vite dev server (:5173), not the API port.
         origins = Array.from(new Set([...origins, 'http://localhost:5173', 'http://localhost:3001']));

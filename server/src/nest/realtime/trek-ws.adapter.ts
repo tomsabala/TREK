@@ -7,6 +7,7 @@ import type { Observable } from 'rxjs';
 import { readEnv } from '../../app-config';
 import { setServer, type TrekWebSocket } from './ws-state';
 import { logError } from '../audit/audit-log.logger';
+import { withBasePath } from '../../app-config/base-path';
 
 // Per-connection message rate limiting. It lives in the adapter, not in the
 // gateway's handlers, because the original counted EVERY inbound frame before
@@ -117,7 +118,7 @@ export class TrekWsAdapter extends WsAdapter {
     const allowedOrigins = readEnv().http.wsOrigins;
     const server = new WebSocketServer({
       server: this.httpServerRef,
-      path: (options?.path as string) ?? '/ws',
+      path: (options?.path as string) ?? withBasePath('/ws'),
       maxPayload: 64 * 1024, // 64 KB max message size
       ...(allowedOrigins
         ? {

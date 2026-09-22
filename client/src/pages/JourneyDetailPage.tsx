@@ -25,6 +25,7 @@ import { GalleryView } from '../components/Journey/JourneyDetailPageGalleryView'
 import { EntryEditor } from '../components/Journey/JourneyDetailPageEntryEditor'
 import { AddTripDialog } from '../components/Journey/JourneyDetailPageAddTripDialog'
 import { JourneySettingsDialog } from '../components/Journey/JourneyDetailPageSettingsDialog'
+import { withBase } from '../utils/basePath'
 
 export default function JourneyDetailPage() {
   // ViewportRoute in App.tsx picks the branch now, so the phone screen is a
@@ -276,7 +277,7 @@ function JourneyDetailPageDesktop() {
                 {current.cover_image && (
                   <>
                     <div className="absolute inset-0 z-[1]">
-                      <img src={`/uploads/${current.cover_image}`} className="w-full h-full object-cover" alt="" />
+                      <img src={withBase(`/uploads/${current.cover_image}`)} className="w-full h-full object-cover" alt="" />
                       <div className="absolute inset-0" style={{ background: pickGradient(current.id), opacity: 0.28 }} />
                     </div>
                     {/* Frosted-left depth (own layer so nothing re-rasterizes it) */}

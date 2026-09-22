@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { evaluate } from '../../../src/systemNotices/conditions.js';
+import { describe, it, expect, vi } from 'vitest';
+import { evaluate, registerPredicate } from '../../../src/systemNotices/conditions.js';
 import type { NoticeCondition, SystemNotice } from '../../../src/systemNotices/types.js';
 
 const baseNotice: SystemNotice = {
@@ -128,5 +128,50 @@ describe('managed', () => {
     expect(evaluate(wantsSelfRun, { ...baseCtx, managed: true })).toBe(false);
     expect(evaluate(wantsManaged, { ...baseCtx, managed: true })).toBe(true);
     expect(evaluate(wantsManaged, { ...baseCtx, managed: false })).toBe(false);
+  });
+});
+
+describe('always', () => {
+  it('passes regardless of the context', () => {
+    const notice = noticeWith({ kind: 'always' });
+    expect(evaluate(notice, baseCtx)).toBe(true);
+    expect(evaluate(notice, { ...baseCtx, managed: true, user: { ...baseCtx.user, role: 'admin' } })).toBe(true);
+  });
+});
+
+describe('noTrips', () => {
+  it('passes only for a user who owns no trip yet', () => {
+    const notice = noticeWith({ kind: 'noTrips' });
+    expect(evaluate(notice, { ...baseCtx, user: { ...baseCtx.user, noTrips: 0 } })).toBe(true);
+    expect(evaluate(notice, { ...baseCtx, user: { ...baseCtx.user, noTrips: 1 } })).toBe(false);
+  });
+});
+
+describe('custom', () => {
+  it('dispatches to the registered predicate, which decides on the context', () => {
+    registerPredicate('test-admin-only', ctx => ctx.user.role === 'admin');
+    const notice = noticeWith({ kind: 'custom', id: 'test-admin-only' });
+
+    expect(evaluate(notice, { ...baseCtx, user: { ...baseCtx.user, role: 'admin' } })).toBe(true);
+    expect(evaluate(notice, baseCtx)).toBe(false);
+  });
+
+  it('fails closed on an unregistered id — a typo hides the notice, never shows it to everyone', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      expect(evaluate(noticeWith({ kind: 'custom', id: 'never-registered' }), baseCtx)).toBe(false);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('never-registered'));
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
+
+describe('unknown kind', () => {
+  it('fails closed, so a notice authored against a newer build stays hidden', () => {
+    // Only reachable from data that outruns this build — a registry entry using
+    // a condition kind added later. The cast is the point of the test.
+    const notice = noticeWith({ kind: 'onceInAWhile' } as unknown as NoticeCondition);
+    expect(evaluate(notice, baseCtx)).toBe(false);
   });
 });

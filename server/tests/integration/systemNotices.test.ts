@@ -286,6 +286,57 @@ describe('GET /api/system-notices/active', () => {
       if (idx !== -1) SYSTEM_NOTICES.splice(idx, 1);
     }
   });
+
+  // The order the client renders in: it takes the list as given and shows the
+  // first item first, so the ordering rule is part of the route's contract, not
+  // an internal detail. Three tie-breakers, exercised in one pass because each
+  // only decides once the one before it is level.
+  it('orders notices by priority, then severity, then recency', async () => {
+    const ordered = (id: string, priority: number, severity: 'info' | 'warn' | 'critical', publishedAt: string): SystemNotice => ({
+      id,
+      display: 'banner',
+      severity,
+      titleKey: `system_notice.${id.replace(/-/g, '_')}.title`,
+      bodyKey: `system_notice.${id.replace(/-/g, '_')}.body`,
+      dismissible: true,
+      conditions: [],
+      publishedAt,
+      priority,
+    });
+    // Pushed out of the expected order so a stable sort alone can't produce it.
+    const fixtures = [
+      ordered('test-order-low-warn-old', 10, 'warn', '2026-01-01T00:00:00Z'),
+      ordered('test-order-low-critical', 10, 'critical', '2026-01-01T00:00:00Z'),
+      ordered('test-order-low-warn-new', 10, 'warn', '2026-02-01T00:00:00Z'),
+      ordered('test-order-high-info', 90, 'info', '2025-01-01T00:00:00Z'),
+    ];
+    SYSTEM_NOTICES.push(...fixtures);
+    try {
+      const { user } = createUser(testDb);
+      testDb.prepare('UPDATE users SET login_count = 5, first_seen_version = ? WHERE id = ?').run('3.0.0', user.id);
+
+      const res = await request(app)
+        .get('/api/system-notices/active')
+        .set('Cookie', authCookie(user.id));
+      expect(res.status).toBe(200);
+
+      const ids = fixtures.map(n => n.id);
+      expect(res.body.map((n: { id: string }) => n.id).filter((id: string) => ids.includes(id))).toEqual([
+        // Highest priority wins even though it is the mildest and the oldest.
+        'test-order-high-info',
+        // Level on priority: the graver severity comes first.
+        'test-order-low-critical',
+        // Level on both: the more recently published one comes first.
+        'test-order-low-warn-new',
+        'test-order-low-warn-old',
+      ]);
+    } finally {
+      for (const n of fixtures) {
+        const idx = SYSTEM_NOTICES.indexOf(n);
+        if (idx !== -1) SYSTEM_NOTICES.splice(idx, 1);
+      }
+    }
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
